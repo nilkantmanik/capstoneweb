@@ -22,8 +22,9 @@ exports.registerUser = async (req, res, next) => {
     });
 
     return res
-      .status(201)
-      .json({ message: "User registered successfully", user });
+        .status(201)
+        .json({ message: "User created successfully" ,user});
+
   } catch (error) {
     console.error("Error creating user:", error);
     return res.status(500).json({ message: "Error registering user" });
@@ -72,31 +73,28 @@ exports.loginUser = async (req, res, next) => {
 exports.addPatient = async (req, res, next) => {
   // const useremail = req.body.useremail;
 
-  const { useremail, name, email } = req.body;
+  const { useremail, name, patientemail } = req.body;
 
   try {
     const user = await User.findOne({ email: useremail });
 
-    if (user) {
-      const existingPatient = user.patients.find(
-        (patient) => patient.email === email
-      );
-
-      if (existingPatient) {
-        return res
-          .status(400)
-          .json({ success: false, error: "Patient already exists" });
-      } else {
-        const newPatient = { name, email };
-        user.patients.push(newPatient);
-        await user.save();
-        return res.status(200).json({ success: true, user });
-      }
-    } else {
+    if (!user) {
       return res.status(404).json({ success: false, error: "User not found" });
     }
+
+    const existingPatient = user.patients.find((p) => p.patemail === patientemail);
+
+    if (existingPatient) {
+      return res.status(400).json({ success: false, error: "Patient already exists" });
+    } else {
+      const newPatient = { name, patemail: patientemail, prediction: "Not Yet Predicted" };
+      user.patients.push(newPatient);
+      await user.save();
+      return res.status(200).json({ success: true, user });
+    }
   } catch (error) {
-    res.status(500).json({ success: false, error: "server error" });
+    console.error("Error adding patient:", error);
+    return res.status(500).json({ success: false, error: "Server error" });
   }
 };
 
@@ -116,28 +114,59 @@ exports.patientList = async (req, res, next) => {
   }
 };
 
+// exports.addPrediction = async (req, res, next) => {
+//   const { useremail, patientemail, prediction } = req.body;
+
+//   try {
+//     const user = await User.findOne({ email: useremail });
+//     if (user) {
+//       const patient = user.patients.find(
+//         (patient) => patient.patemail === patientemail
+//       );
+//       if (patient) {
+//         patient.prediction = prediction;
+//         await user.save();
+//         return res
+//           .status(200)
+//           .json({ success: true, message: "Prediction added successfully" });
+//       } else {
+//         return res
+//           .status(404)
+//           .json({ success: false, error: "Patient not found" });
+//       }
+//     } else {
+//       return res.status(404).json({ success: false, error: "User not found" });
+//     }
+//   } catch (error) {
+//     res.status(500).json({ success: false, error: "server error" });
+//   }
+// };
 
 
 exports.addPrediction = async (req, res, next) => {
-  const { useremail,patientemail,prediction } = req.body;
+  const { useremail, patientemail, prediction } = req.body;
 
   try {
     const user = await User.findOne({ email: useremail });
-    if (user) {
-      const patient = user.patients.find((patient) => patient.email === patientemail);
-      if (patient) {
-        patient.prediction = prediction;
-        await user.save();
-        return res.status(200).json({ success: true, message: "Prediction added successfully" });
-      } else {
-        return res.status(404).json({ success: false, error: "Patient not found" });
-      }
-    } else {
+
+    if (!user) {
       return res.status(404).json({ success: false, error: "User not found" });
     }
+
+    const patient = user.patients.find((patient) => patient.patemail === patientemail);
+
+    if (!patient) {
+      return res.status(404).json({ success: false, error: "Patient not found" });
+    }
+
+    patient.prediction = prediction;
+    await user.save();
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Prediction added successfully" });
   } catch (error) {
-    res.status(500).json({ success: false, error: "server error" });
+    console.error("Error adding prediction:", error);
+    return res.status(500).json({ success: false, error: "Server error" });
   }
 };
-
-

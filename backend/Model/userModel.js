@@ -9,35 +9,30 @@ const userSchema = new mongoose.Schema({
   email: {
     type: String,
     required: [true, "Please Enter  email"],
+    unique: true,
     validate: [validator.isEmail, "Please Enter valid email"],
-    unique:true,
   },
   password: {
     type: String,
     required: [true, "Please Enter password"],
-    minLength: [5, "Please Enter valid password"],
+    minLength: [1, "Please Enter valid password"],
   },
-  patients: [
+  patients:[
     {
-      name: {
-        type: String,
-        required: [true, "Please Enter valid name for patient"],
-      },
-      email: {
-        type: String,
-        required: [true, "Please Enter email for patient"],
-        validate: [validator.isEmail, "Please Enter valid email for patient"],
-        unique:true,
-      },
-      prediction: {
-        type: String,
-        default:"Not yet checked"
-        // required: [true, "Please Enter prediction for patient"],
-      },
-    },
-  ],
+        name:{
+            type:String,
+            required:true,
+        },
+        patemail:{
+          type: String,
+          required: [true, "Please Enter  email"],
+        },
+        prediction:{
+            type:String,
+            default:"Not Yet Predicted"
+        }
+    }
+],
 });
-
-
 
 module.exports = mongoose.model("User", userSchema);
